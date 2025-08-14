@@ -67,6 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['image'])) {
                         }
                     } elseif ($conversion_method === 'cwebp') {
                         $conversion_successful = convertWithCwebp($original_image, $output_file, $quality);
+                    } elseif ($conversion_method === 'gif2webp') {
+                        $conversion_successful = convertWithCwebp($original_image, $output_file, $quality);
                     }
 
                     if ($conversion_successful) {
@@ -121,6 +123,10 @@ function convertWithGD($source, $destination, $original_type, $quality) {
     }
 
     if ($image !== null) {
+        // Ensure image is in truecolor format to avoid "Palette image not supported" warnings
+        if (!imageistruecolor($image)) {
+            imagepalettetotruecolor($image);
+        }
         return imagewebp($image, $destination, $quality);
     }
     return false;
@@ -129,10 +135,23 @@ function convertWithGD($source, $destination, $original_type, $quality) {
 function convertWithImagick($source, $destination, $quality) {
     try {
         $image = new Imagick($source);
+
+        // Handle animated GIFs
+        if (strtolower(pathinfo($source, PATHINFO_EXTENSION)) === 'gif') {
+            $image = $image->coalesceImages();
+            $image->setOption('webp:animation', 'true');
+        }
+
         $image->setImageFormat('webp');
         $image->setImageCompressionQuality($quality);
         $image->setOption('webp:lossless', 'true');
-        $image->writeImage($destination);
+        
+        if ($image->getNumberImages() > 1) {
+            $image->writeImages($destination, true);
+        } else {
+            $image->writeImage($destination);
+        }
+        
         return true;
     } catch (Exception $e) {
         return false;
@@ -140,10 +159,36 @@ function convertWithImagick($source, $destination, $quality) {
 }
 
 function convertWithCwebp($source, $destination, $quality) {
-    // Check if cwebp is installed
+    global $error;
+    $source_type = strtolower(pathinfo($source, PATHINFO_EXTENSION));
+    
+    // Use gif2webp for animated GIFs
+    if ($source_type === 'gif') {
+        $tool_path = trim(shell_exec('which gif2webp'));
+        if (empty($tool_path)) {
+            $error = 'gif2webp tool not found. Please install it to convert animated GIFs.';
+            // Fallback to cwebp for single frame conversion
+            return convertWithCwebpFallback($source, $destination, $quality);
+        }
+        $command = escapeshellarg($tool_path) . ' -q ' . $quality . ' ' . escapeshellarg($source) . ' -o ' . escapeshellarg($destination);
+    } else {
+        // Use cwebp for other image types
+        $tool_path = trim(shell_exec('which cwebp'));
+        if (empty($tool_path)) {
+            $error = 'cwebp tool not found. Please install it.';
+            return false;
+        }
+        $command = escapeshellarg($tool_path) . ' -q ' . $quality . ' -lossless ' . escapeshellarg($source) . ' -o ' . escapeshellarg($destination);
+    }
+
+    shell_exec($command);
+    return file_exists($destination);
+}
+
+function convertWithCwebpFallback($source, $destination, $quality) {
+    global $error;
     $cwebp_path = trim(shell_exec('which cwebp'));
     if (empty($cwebp_path)) {
-        global $error;
         $error = 'cwebp tool not found. Please install it.';
         return false;
     }
@@ -191,6 +236,7 @@ function formatSize($bytes) {
                     <option value="gd" <?php echo ($conversion_method === 'gd') ? 'selected' : ''; ?>>PHP-GD</option>
                     <option value="imagick" <?php echo ($conversion_method === 'imagick') ? 'selected' : ''; ?>>PHP-Imagick</option>
                     <option value="cwebp" <?php echo ($conversion_method === 'cwebp') ? 'selected' : ''; ?>>cwebp (shell)</option>
+                    <option value="gif2webp" <?php echo ($conversion_method === 'gif2webp') ? 'selected' : ''; ?>>gif2webp (shell)</option>
                 </select>
             </div>
             <div class="form-group">
