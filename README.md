@@ -1,14 +1,14 @@
 # Image to WebP Converter
 
-A simple web-based tool to convert images (JPG, JPEG, PNG, GIF) to the WebP format using PHP. Supports multiple conversion methods: PHP-GD, PHP-Imagick, and cwebp (shell tool). Allows batch conversion with selectable quality range.
+A simple web-based tool to convert images (JPG, JPEG, PNG, GIF) to the WebP format using PHP. Automatically selects conversion method: uses PHP-GD for static images and PHP-Imagick for animated GIFs. Fixed quality at 90 for simplicity.
 
 ---
 
 ## Features
-- Upload an image and convert it to WebP format.
-- Choose conversion method: PHP-GD, PHP-Imagick, or cwebp.
-- Set a quality range for batch conversion (e.g., 60–90).
-- View original and converted images with size and reduction statistics.
+- **Auto-method**: PHP-GD for static images; PHP-Imagick for animated GIFs.
+- **Fixed quality**: 90.
+- **Simple UI**: Upload a file and get one converted output.
+- **Stats**: Shows sizes and reduction percentage.
 - Clean, responsive UI (see `assets/style.css`).
 
 ---
@@ -23,22 +23,19 @@ A simple web-based tool to convert images (JPG, JPEG, PNG, GIF) to the WebP form
 - **PHP-GD**: PHP compiled with the GD extension and WebP support.
     - Install: `sudo apt-get install php-gd`
     - Check WebP support: Run `php -i | grep -i webp` and look for `WebP Support => enabled`.
-- **PHP-Imagick**: Imagick PHP extension with WebP support.
+- **PHP-Imagick**: Imagick PHP extension with WebP support (required for animated GIFs).
     - Install: `sudo apt-get install php-imagick`
     - Check WebP support: Run `php -i | grep imagick` and check supported formats for `WEBP`.
-- **cwebp**: The `cwebp` command-line tool (from the [libwebp](https://developers.google.com/speed/webp/download) package).
-    - Install: `sudo apt-get install webp`
-    - Check: Run `cwebp -version` in your terminal.
 
-> **Note:** At least one conversion method must be available for the converter to work. The default is PHP-GD.
+> **Note:** PHP-GD is used for static images; PHP-Imagick is required for animated GIFs.
 
 ---
 
-## Installation
+## Installation / Running locally (Linux)
 
-1. **Clone or Download** this repository to your web server directory:
+1. **Clone or Download** this repository to your web server directory or to any folder:
    ```sh
-   git clone https://github.com/HaykazXP/image-convertor-poc "Image convertor"
+    git clone https://github.com/HaykazXP/image-convertor-poc "Image convertor"
    # or download and extract the ZIP
    ```
 
@@ -49,35 +46,32 @@ A simple web-based tool to convert images (JPG, JPEG, PNG, GIF) to the WebP form
      sudo chmod -R 755 uploads converted
      ```
 
-3. **Install Dependencies**
-   - Install at least one of the required PHP extensions/tools (see Requirements above).
+3. **Install PHP extensions**
+    - `sudo apt-get update && sudo apt-get install -y php php-gd php-imagick`
 
 4. **Configure PHP (if needed)**
    - Make sure `file_uploads` is enabled in your `php.ini`.
    - Increase `upload_max_filesize` and `post_max_size` if you want to allow larger images.
 
-5. **Access the App**
-   - Open your browser and navigate to the directory where you placed the project (e.g., `http://localhost/Image%20convertor/index.php`).
+5. **Run a local PHP server** (if you don't have Apache/Nginx configured)
+    - From the project folder, run:
+      ```sh
+      php -S localhost:8000
+      ```
+    - Open your browser at `http://localhost:8000/index.php`.
 
 ---
 
 ## Usage
 
 1. **Upload an Image**
-   - Click "Select image to upload" and choose a JPG, JPEG, PNG, or GIF file (max 5MB).
+    - Click "Select image to upload" and choose a JPG, JPEG, PNG, or GIF file (max 5MB).
 
-2. **Select Conversion Method**
-   - Choose between PHP-GD, PHP-Imagick, or cwebp (shell) from the dropdown.
-   - If a method is not available, an error will be shown.
+2. **Convert**
+    - Click "Convert Image". The app auto-selects the method (GD or Imagick) and uses quality 90.
 
-3. **Set Quality Range**
-   - Enter minimum and maximum quality (1–100). The converter will generate a WebP for each quality value in the range.
-
-4. **Convert**
-   - Click "Convert Image". The results will show the original and all converted images, with size and reduction stats.
-
-5. **Download Converted Images**
-   - Right-click and save any of the generated WebP images.
+3. **Download Converted Image**
+    - Right-click and save the generated WebP image.
 
 ---
 
@@ -97,8 +91,8 @@ Image convertor/
 
 ## Troubleshooting
 
-- **GD/Imagick/cwebp not found:**
-  - Make sure the required extension/tool is installed and enabled.
+- **GD or Imagick not found:**
+  - Make sure the required extension is installed and enabled.
   - Check your PHP error logs for details.
 - **WebP not supported:**
   - For GD/Imagick, check that WebP support is enabled (see Requirements).
