@@ -125,3 +125,7 @@ MIT License
 - [WebP format by Google](https://developers.google.com/speed/webp/)
 - PHP GD and Imagick extensions
 - [libwebp](https://developers.google.com/speed/webp/download) (for cwebp)
+
+
+- **Integration Version:**
+  - There is an encapsulated version in the `integration_version` branch. It's worth checking that branch.
