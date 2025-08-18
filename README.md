@@ -56,9 +56,12 @@ A simple web-based tool to convert images (JPG, JPEG, PNG, GIF) to the WebP form
    - Make sure `file_uploads` is enabled in your `php.ini`.
    - Increase `upload_max_filesize` and `post_max_size` if you want to allow larger images.
 
-5. **Access the App**
-   - Open your browser and navigate to the directory where you placed the project (e.g., `http://localhost/Image%20convertor/index.php`).
-
+5. **Run a local PHP server** (if you don't have Apache/Nginx configured)
+    - From the project folder, run:
+      ```sh
+      php -S localhost:8000
+      ```
+    - Open your browser at `http://localhost:8000/index.php`.
 ---
 
 ## Usage
